@@ -1,0 +1,9 @@
+[package]
+name = "fork"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "4.5.32"
+git2 = "0.20.0"
+rusqlite = "0.34.0"
