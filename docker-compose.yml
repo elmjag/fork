@@ -1,0 +1,5 @@
+services:
+  fork:
+    container_name: fork
+    build:
+      context: .
