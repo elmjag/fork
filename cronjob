@@ -1,0 +1,1 @@
+15 1 *  *  * cd /app && /app/update_stats.sh >> /var/log/stat_updates.log 2>&1

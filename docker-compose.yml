@@ -1,0 +1,5 @@
+services:
+  mxcube:
+    container_name: fork
+    build:
+      context: .
