@@ -1,0 +1,106 @@
+<html>
+<head>
+  <title>MAXIV MXCuBE fork</title>
+</head>
+<body>
+
+<div>
+  <h3>mxcubecore</h3>
+  <canvas id="mxcubecore"></canvas>
+</div>
+<div>
+  <h3>mxcubeweb</h3>
+  <canvas id="mxcubeweb"></canvas>
+</div>
+
+<script src="chart.js"></script>
+<script>
+
+
+async function loadData() {
+  const url = "stats";
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    return await response.json();
+
+
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+async function main() {
+  const stats = await loadData();
+
+  createChart('mxcubecore', stats.mxcubecore);
+  createChart('mxcubeweb', stats.mxcubeweb);
+}
+
+
+function createChart(canvas_id, chartData)
+{
+  const ctx = document.getElementById(canvas_id);
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartData.timestamps,
+      datasets: [
+
+        // commits
+        {
+          yAxisID: 'left-y-axis',
+          data: chartData.commits,
+          label: 'commits',
+          borderColor: "blue",
+        },
+
+        // deletions
+        {
+          yAxisID: 'right-y-axis',
+          data: chartData.deletions,
+          label: 'deletions',
+          fill: true,
+          backgroundColor: "pink",
+        },
+
+        // insertions
+        {
+          yAxisID: 'right-y-axis',
+          data: chartData.insertions,
+          label: 'insertions',
+          fill: true,
+          backgroundColor: "lightgreen",
+        }
+      ],
+    },
+    options: {
+        scales: {
+            'left-y-axis': {
+                type: 'linear',
+                position: 'left',
+                beginAtZero: true,
+                grid: { drawOnChartArea: false },
+            },
+            'right-y-axis': {
+                type: 'linear',
+                position: 'right',
+                beginAtZero: true,
+                grid: { drawOnChartArea: false },
+            }
+        }
+    }
+  });
+}
+
+main();
+
+</script>
+
+</body>
+</html>
