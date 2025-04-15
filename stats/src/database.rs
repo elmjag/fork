@@ -1,6 +1,6 @@
-use std::path::PathBuf;
-
 use rusqlite::{Connection, Result};
+use serde::Serialize;
+use std::path::PathBuf;
 
 const DB_SCHEMA: [&str; 2] = [
     "
@@ -39,6 +39,17 @@ const INSERT_FORK_STATS_QUERY: &str = "
         values(?1, ?2, ?3, ?4, ?5)
 ";
 
+const GET_FORK_STATS_QUERY: &str = "
+    select
+        timestamp,
+        commits,
+        insertions,
+        deletions
+    from fork_stats
+    where repository = ?1
+    order by timestamp;
+";
+
 pub struct Database {
     connection: Connection,
 }
@@ -55,13 +66,24 @@ fn setup_db(db_file_path: &str) -> Result<Connection> {
     Ok(conn)
 }
 
-fn get_repo_id(connection: &Connection, repository: &PathBuf) -> Result<u32> {
-    let name = repository.file_name().unwrap().to_str().unwrap();
+#[derive(Serialize, Default)]
+pub struct ForkStats {
+    timestamps: Vec<u64>,
+    commits: Vec<u32>,
+    insertions: Vec<u32>,
+    deletions: Vec<u32>,
+}
 
+fn get_repo_id_by_name(connection: &Connection, name: &str) -> Result<u32> {
     connection.execute(INSERT_REPO_NAME_QUERY, (name,))?;
     let res: Result<u32> = connection.query_row(GET_REPO_ID_QUERY, [name], |row| row.get(0));
 
     res
+}
+
+fn get_repo_id_by_path(connection: &Connection, repository: &PathBuf) -> Result<u32> {
+    let name = repository.file_name().unwrap().to_str().unwrap();
+    get_repo_id_by_name(connection, name)
 }
 
 fn add_fork_stats_entry(
@@ -89,6 +111,22 @@ fn add_fork_stats_entry(
     }
 }
 
+fn get_fork_stats(connection: &Connection, repository_id: u32) -> Result<ForkStats> {
+    let mut stmt = connection.prepare(GET_FORK_STATS_QUERY)?;
+    let mut rows = stmt.query([repository_id])?;
+
+    let mut fork_stats = ForkStats::default();
+
+    while let Some(row) = rows.next()? {
+        fork_stats.timestamps.push(row.get(0)?);
+        fork_stats.commits.push(row.get(1)?);
+        fork_stats.insertions.push(row.get(2)?);
+        fork_stats.deletions.push(row.get(3)?);
+    }
+
+    Ok(fork_stats)
+}
+
 impl Database {
     pub fn connect(db_file_path: &str) -> Result<Database, String> {
         let conn = match setup_db(db_file_path) {
@@ -108,7 +146,7 @@ impl Database {
         insertions: usize,
         deletions: usize,
     ) -> Result<(), String> {
-        let repository_id = get_repo_id(&self.connection, repository).unwrap();
+        let repository_id = get_repo_id_by_path(&self.connection, repository).unwrap();
 
         println!(
             "DB: {} {} id = {} commits {} insertions {} deletions {}",
@@ -130,5 +168,15 @@ impl Database {
         )?;
 
         Ok(())
+    }
+
+    pub fn get_fork_stats(&self, repository_name: &str) -> Result<ForkStats, String> {
+        let repository_id = get_repo_id_by_name(&self.connection, repository_name).unwrap();
+        let res = get_fork_stats(&self.connection, repository_id);
+
+        match res {
+            Ok(fork_stats) => Ok(fork_stats),
+            Err(err) => Err(err.to_string()),
+        }
     }
 }

@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+actix-web = "4.10.2"
 clap = "4.5.32"
 git2 = "0.20.0"
+mime = "0.3.17"
 rusqlite = "0.34.0"
+serde = {version = "1.0.219", features = ["derive"]}

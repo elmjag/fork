@@ -1,12 +1,10 @@
 use clap::{arg, Command};
 use std::fs::canonicalize;
 use std::path::PathBuf;
+use std::time::{Duration, SystemTime, SystemTimeError, UNIX_EPOCH};
 
-mod repo;
-use repo::get_fork_stats;
-
-mod database;
-use database::Database;
+use fork::database::Database;
+use fork::repo::get_fork_stats;
 
 const DB_FILE: &str = "fork.db";
 
@@ -22,8 +20,6 @@ fn args() -> PathBuf {
     let repo_path = canonicalize(matches.get_one::<String>("repo_path").unwrap()).unwrap();
     repo_path
 }
-
-use std::time::{Duration, SystemTime, SystemTimeError, UNIX_EPOCH};
 
 fn get_now_timestamp() -> Result<u64, String> {
     fn get_ts() -> Result<Duration, SystemTimeError> {
