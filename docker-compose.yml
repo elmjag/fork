@@ -3,3 +3,9 @@ services:
     container_name: fork
     build:
       context: .
+    volumes:
+      - source: 'fork.db'
+        target: '/app/fork.db'
+        type: bind
+    ports:
+     - "8080:8080"  # ueb

@@ -1,0 +1,10 @@
+database_file = "/app/fork.db"
+repos = ["/repos/mxcubecore", "/repos/mxcubeweb"]
+
+[ueb]
+bin = "/app/ueb"
+ui = "/app/ui"
+
+[stats]
+bin = "/app/stats"
+exec_time = "00:00:00"
